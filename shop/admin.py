@@ -1,0 +1,9 @@
+from django.contrib import admin
+
+from shop.models import Shop
+
+class ShopAdmin(admin.ModelAdmin):
+    list_display=['user', 'owner_name', 'is_approved', 'created_at']
+    list_display_links=['user', 'owner_name']
+
+admin.site.register(Shop, ShopAdmin)
