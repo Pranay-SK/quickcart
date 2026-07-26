@@ -1,0 +1,12 @@
+{% autoescape off%}
+
+Hi {{user.first_name}},
+
+{% if is_approved  %}
+Congrutulations! Your Shop has been approved by our admin team. --Quickcart
+{% else %}
+Sorry! Your Shop has not been approved. For more details, please contact support@quickcart.com. -- Quickcart
+{% endif %}
+
+
+{% endautoescape%}

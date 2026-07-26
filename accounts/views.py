@@ -12,6 +12,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied
+from shop.models import Shop
 # Create your views here.
 
 
@@ -60,7 +61,7 @@ def registerUser(request):
              # Send verification email
             
             mail_subject="Please activate your account"
-            email_template='accounts/emails/account_vericication_email.html'
+            email_template='accounts/emails/account_verification_email.html'
             send_verification_email(request, user,mail_subject,email_template)
             messages.success(request, 'Your account has been registered sucessfully!')
             return redirect('registerUser')
@@ -99,7 +100,7 @@ def registerShop(request):
 
             # Send verification email
             mail_subject="Please activate your account"
-            email_template='accounts/emails/account_vericication_email.html'
+            email_template='accounts/emails/account_verification_email.html'
             send_verification_email(request, user,mail_subject,email_template)
             
             messages.success(request, 'Your account has been registered successfully! Please wait for the approval of your shop to get started.')
