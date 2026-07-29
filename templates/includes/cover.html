@@ -1,6 +1,6 @@
 {% load static %}
 
-<div class="page-section restaurant-detail-image-section" style=" background: url({{shop.user_profile.cover_photo.url}}) no-repeat scroll 0 0 / cover;">
+<div class="page-section restaurant-detail-image-section" {% if shop.user_profile.cover_photo %}style=" background: url({{shop.user_profile.cover_photo.url}}) no-repeat scroll 0 0 / cover;"{% else %}style=" background: url({% static 'images/default-cover.PNG' %}) no-repeat scroll 0 0 / cover;"{% endif %}>
 <!-- Container Start -->
 <div class="container">
 <!-- Row Start -->
@@ -11,7 +11,11 @@
 <div class="company-info">
 <div class="img-holder">
 <figure>
+{% if shop.user_profile.profile_picture %}
 <img src="{{shop.user_profile.profile_picture.url}}" alt="">
+{% else %}
+<img src="{% static 'images/default-profile.PNG' %}" alt="No Profile Picture">
+{% endif %}
 </figure>
 </div>
 

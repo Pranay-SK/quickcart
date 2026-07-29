@@ -176,8 +176,14 @@ def custdashboard(request):
 
 @login_required(login_url='login')
 @user_passes_test(check_role_shopper)
+@login_required(login_url='login')
+@user_passes_test(check_role_shopper)
 def shopperdashboard(request):
-    return render(request, 'accounts/shopperdashboard.html')
+    shop = Shop.objects.get(user=request.user)
+    context = {
+        'shop': shop,
+    }
+    return render(request, 'accounts/shopperdashboard.html', context)
 
 def forgot_password(request):
     if request.method=='POST':

@@ -3,7 +3,7 @@
 <ul>
 <li class="{% if request.path == '/accounts/shopperdashboard/' or request.path == '/accounts/shop/' %}active{% endif %}"><a href="{% url 'shopperdashboard' %}"><i class="icon-dashboard3"></i>Dashboard</a></li>
 <li class="{% if 'profile' in request.path %}active{% endif %}"><a href="{% url 'shopprofile' %}"><i class="icon-building"></i>My Shop</a></li>
-<li><a href="restaurant-menu-builder.html"><i class="icon-menu5"></i>Add products</a></li>
+ <li class="{% if 'items_list' in request.path %}active{% endif %}"><a href="{% url 'items_list' %}"><i class="icon-menu5"></i>Add Items</a></li>
 <li><a href="restaurant-orders.html"><i class="icon-add_shopping_cart"></i>Orders</a></li>
 <li><a href="restaurant-earnings.html"><i class="icon-money"></i>Earnings</a></li>
 <li><a href="restaurant-statement.html"><i class="icon-file-text22"></i>Statement</a></li>
