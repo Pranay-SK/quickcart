@@ -15,4 +15,9 @@ urlpatterns = [
     path('item-list/category/edit/<int:pk>',views.edit_category,name='edit_category'),
     path('item-list/category/delete/<int:pk>',views.delete_category,name='delete_category'),
 
+    # Item CRUD
+    path('item-list/item/add/',views.add_item,name='add_item'),
+    path('item-list/item/edit/<int:pk>',views.edit_item,name='edit_item'),
+    path('item-list/item/delete/<int:pk>',views.delete_item,name='delete_item'),
+
 ]

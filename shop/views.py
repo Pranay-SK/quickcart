@@ -1,4 +1,8 @@
+from unicodedata import category
+
 from django.shortcuts import get_object_or_404, render, redirect
+
+import shop
 from .forms import ShopForm
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
@@ -7,7 +11,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import check_role_shopper
 from items.models import Category, Product
-from items.forms import CategoryForm
+from items.forms import CategoryForm, ProductForm
 from django.template.defaultfilters import slugify
 
 
@@ -70,6 +74,7 @@ def items_by_category(request, pk=None):
     context = {
         'items': items,
         'category': category,
+        'shop': shop,
     }
     return render(request, 'shop/items_by_category.html', context)
 
@@ -135,3 +140,83 @@ def delete_category(request, pk=None):
     category.delete()
     messages.success(request, 'Category has been deleted successfully!')
     return redirect('items_list')
+@login_required(login_url='login')
+@user_passes_test(check_role_shopper)
+def delete_category(request, pk=None):
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    messages.success(request, 'Category has been deleted successfully!')
+    return redirect('items_list')
+
+
+@login_required(login_url='login')
+@user_passes_test(check_role_shopper)
+def add_item(request):
+    """Add a new product for the current  shop."""
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product_title = form.cleaned_data.get('product_title')
+            product = form.save(commit=False)
+            product.shop = get_shop(request)
+            product.save()  # here the product id will be generated
+            # create unique slug using id to avoid conflicts
+            if product_title:
+                product.slug = slugify(product_title) + '-' + str(product.id)
+            else:
+                product.slug = str(product.id)
+            product.save()
+            messages.success(request, 'Product added successfully!')
+            return redirect('items_by_category', product.category.id)
+        else:
+            print(form.errors)
+
+    else:
+        form = ProductForm()
+        # modify this form
+        form.fields['category'].queryset = Category.objects.filter(shop=get_shop(request))
+    context = {
+        'form': form,
+        'shop': get_shop(request),
+    }
+    return render(request, 'shop/add_item.html', context)
+
+
+
+@login_required(login_url='login')
+@user_passes_test(check_role_shopper)
+def edit_item(request, pk=None):
+    item = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=item)
+        if form.is_valid():
+            product_title = form.cleaned_data['product_title']
+            product = form.save(commit=False)
+            product.shop = get_shop(request)
+            product.slug = slugify(product_title) + '-' + str(product.id)
+            form.save()
+            messages.success(request, 'Product updated successfully!')
+            return redirect('items_by_category', item.category.id)
+        else:
+            print(form.errors)
+
+    else:
+        form = ProductForm(instance=item)
+        form.fields['category'].queryset = Category.objects.filter(shop=get_shop(request))
+    shop = get_shop(request)
+    # ensure template has access to the item and its category
+    category = item.category
+    context = {
+        'form': form,
+        'item': item,
+        'category': category,
+        'shop': shop,
+    }
+    return render(request, 'shop/edit_item.html', context)
+
+def delete_item(request, pk=None):
+    item = get_object_or_404(Product, pk=pk)
+    category_id = item.category.id  # Store the category ID before deletion
+    item.delete()
+    messages.success(request, 'Product has been deleted successfully!')
+    return redirect('items_by_category', category_id)  # Redirect to the category page after deletion
