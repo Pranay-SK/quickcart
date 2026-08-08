@@ -20,6 +20,15 @@
 	<link href="{% static 'css/bootstrap-slider.css' %}" rel="stylesheet">
 	
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+      <!-- I put this here because the font awesome icons were not showing up in the shop_detail.html page. I think it is because the base.html file was not loading the font awesome css file. So I added it here in the shop_detail.html file. -->
+	<!-- <link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+
+   <!-- ------------------------------------------------------ -->
+
+
+
 	<!-- JAVASCRIPT -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script src="{% static 'js/modernizr.js' %}"></script>
@@ -28,9 +37,12 @@
 
 	<link rel="stylesheet" href="{% static 'css/custom.css' %}">
 
+	{% if '/profile/' in request.GET %}
 	<script src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_API_KEY}}&libraries=places&callback=initAutoComplete" async defer></script>
+	{% endif %}
+	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-	<script src="{% static 'js/custom.js' %}"></script>
+	<script src="{% static 'js/custom.js' %}?v=3"></script>
 
 	<style>
 		body, .main-section p, .mce-content-body p{

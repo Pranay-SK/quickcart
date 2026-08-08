@@ -13,6 +13,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied
 from shop.models import Shop
+from django.template.defaultfilters import slugify
 # Create your views here.
 
 
@@ -78,7 +79,7 @@ def registerUser(request):
 def registerShop(request):
     if request.user.is_authenticated:
         messages.warning(request, 'You are already logged in.')
-        return redirect('dashboard')
+        return redirect('myAccount')
     elif request.method=='POST':
         # Store the data and create the user
         form=UserForm(request.POST)
@@ -94,6 +95,8 @@ def registerShop(request):
             user.save()
             shop=shop_form.save(commit=False)
             shop.user=user
+            owner_name=shop_form.cleaned_data.get('owner_name')
+            shop.shop_slug=slugify(shop.owner_name)+'-'+str(user.id)
             user_profile=UserProfile.objects.get(user=user)
             shop.user_profile=user_profile
             shop.save()

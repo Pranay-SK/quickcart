@@ -3515,3 +3515,12 @@ ul.user-controls li:first-child i { color: #0f0851; }
 .woocommerce .place-order button.button:hover {background: #c33332;}
 
 /* WOOCOMMERCE END */
+
+@font-face {
+    font-family: "icomoon";
+    src: url("../fonts/icomoon.woff") format("woff");
+}
+
+.icon-plus4:before {
+    content: "\e9xx";
+}
