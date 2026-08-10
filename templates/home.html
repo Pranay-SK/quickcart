@@ -88,9 +88,9 @@ Fresh groceries and everyday essentials delivered to your doorstep in minutes fr
 <li class="has-border">
 <figure>
 	{% if shop.user_profile.profile_picture %}
-	<a href="#"><img src="{{ shop.user_profile.profile_picture.url }}" class="attachment-full size-full wp-post-image" alt=""></a>
+	<a href="{% url 'shop_detail' shop.shop_slug %}"><img src="{{ shop.user_profile.profile_picture.url }}" class="attachment-full size-full wp-post-image" alt=""></a>
 	{% else %}
-	<a href="#"><img src="{% static 'extra-images/Default_shop_image.png' %}" class="attachment-full size-full wp-post-image" alt=""></a>
+	<a href="{% url 'shop_detail' shop.shop_slug %}"><img src="{% static 'extra-images/Default_shop_image.png' %}" class="attachment-full size-full wp-post-image" alt=""></a>
 
 	{% endif%}
 </figure>
@@ -131,7 +131,7 @@ Fresh groceries and everyday essentials delivered to your doorstep in minutes fr
 <div class="list-post featured">
 	<div class="img-holder">
 		<figure>
-			<a href="#">
+			<a href="{% url 'shop_detail' shop.shop_slug %}">
 				{% if shop.user_profile.profile_picture %}
 				<img src="{{ shop.user_profile.profile_picture.url }}" class="img-thumb wp-post-image" alt="">
 			    {% else %}
@@ -155,6 +155,16 @@ Fresh groceries and everyday essentials delivered to your doorstep in minutes fr
 			{{ shop.user_profile.pin_code }}</span>
 		</span>
 		
+		{% endif %}
+
+		{% if shop.kms %}
+		    <br>
+			<span>
+				<small>
+					<b>{{shop.kms}} km </b>away
+				</small>
+			</span>
+
 		{% endif %}
 	</div>
 <div class="list-option">
