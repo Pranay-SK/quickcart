@@ -1,12 +1,17 @@
 from django.db.models import Prefetch
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 
 from items.models import Category, Product
 from .models import Cart
 from shop.models import Shop
 from .context_processors import get_cart_amounts, get_cart_counter
+from django.db.models import Q
+
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.measure import D  # ``D`` is a shortcut for ``Distance``
+from django.contrib.gis.db.models.functions import Distance
 
 #from decimal import Decimal
 
@@ -148,5 +153,37 @@ def delete_cart(request, cart_id):
         else:
             return JsonResponse({'status': 'Failed', 'message': 'Invalid request!'})
 
+
+def search(request):
+    if not 'address' in request.GET:
+        return redirect('marketplace')
+    else:
+        address = request.GET.get('address', '')
+        latitude = request.GET.get('lat', '')
+        longitude = request.GET.get('lng', request.GET.get('log', ''))
+        radius = request.GET.get('radius', '')
+        keyword = request.GET.get('keyword', '')
+
+        # get shop ids that has product has user is looking for
+        fetch_shops_by_product=Product.objects.filter(product_title__icontains=keyword,is_available=True).values_list('shop',flat=True)
+         # print(fetch_shops_by_product)
+        shops=Shop.objects.filter(Q(id__in=fetch_shops_by_product) | Q(owner_name__icontains=keyword,is_approved=True,user__is_active=True))
+
+        if latitude and longitude and radius:
+            pnt = GEOSGeometry('POINT(%s %s)' %(longitude,latitude))
+
+            shops=  Shop.objects.filter(Q(id__in=fetch_shops_by_product) | Q(owner_name__icontains=keyword,is_approved=True,user__is_active=True),user_profile__location__distance_lte=(pnt, D(km=radius))).annotate(distance=Distance("user_profile__location",pnt)).order_by("distance")
+
+            for s in shops:
+                s.kms=round(s.distance.km,1)
+
+            shop_count = shops.count()
+            context = {
+                'shops': shops,
+                'shops_count': shop_count,
+                'source_location': address,
+            }
+
+            return render(request,'marketplace/listings.html',context)
 
 

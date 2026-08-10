@@ -41,11 +41,15 @@
 
             <div class="post-title">
             <h5>
-            <a href="#">{{ shop.owner_name }}</a>
+            <a href="{% url 'shop_detail' shop.shop_slug %}">{{ shop.owner_name }}</a>
             </h5>
             </div>
             {% if shop.user_profile.address %}
             <span><small>{{ shop.user_profile.address }}</small></span>
+            {% endif %}
+            {% if source_location %}
+            <br>
+            <span><small><b>{{shop.kms}}km</b> away from {{source_location}}</small></span>
             {% endif %}
 
             </div>

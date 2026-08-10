@@ -90,6 +90,8 @@ def add_category(request):
             category.shop = get_shop(request)
             
             category.save() # here the category id will be generated
+           
+            
             category.slug = slugify(category_name)+'-'+str(category.id) # chicken-15
             category.save()
             messages.success(request, 'Category added successfully!')
