@@ -133,7 +133,7 @@ $(document).ready(function(){
                     $('#qty-'+product_id).html(response.qty);
                     applyCartAmounts(
                         response.cart_amount['subtotal'],
-                        response.cart_amount['tax'],
+                        response.cart_amount['tax_dict'],
                         response.cart_amount['grand_total']
                     );
 
@@ -178,7 +178,7 @@ $(document).ready(function(){
                     checkEmptyCart();
                            applyCartAmounts(
                         response.cart_amount['subtotal'],
-                        response.cart_amount['tax'],
+                        response.cart_amount['tax_dict'],
                         response.cart_amount['grand_total']
                     );
                 }
@@ -236,7 +236,7 @@ $(document).ready(function(){
                     removeCartItem(0, cart_id);
                     applyCartAmounts(
                         response.cart_amount['subtotal'],
-                        response.cart_amount['tax'],
+                        response.cart_amount['tax_dict'],
                         response.cart_amount['grand_total']
                     );
                     checkEmptyCart();
@@ -276,13 +276,24 @@ $(document).ready(function(){
     }
 
     // apply cart amounts
-    function applyCartAmounts(subtotal, tax, grand_total){
+    function applyCartAmounts(subtotal, tax_dict, grand_total){
         if(window.location.pathname == '/cart/'){
             var s = Number(subtotal) || 0;
             var g = Number(grand_total) || 0;
             $('#subtotal').text(s.toFixed(2));
             // template uses id="total" for grand total
             $('#total').text(g.toFixed(2));
+
+            if (tax_dict && typeof tax_dict === 'object') {
+                for (var key1 in tax_dict) {
+                    if (!tax_dict.hasOwnProperty(key1)) continue;
+                    var taxItem = tax_dict[key1];
+                    for (var key2 in taxItem) {
+                        if (!taxItem.hasOwnProperty(key2)) continue;
+                        $('#tax-' + key1).text(Number(taxItem[key2] || 0).toFixed(2));
+                    }
+                }
+            }
         }
     }
 
@@ -319,7 +330,7 @@ $(document).ready(function(){
                     removeCartItem(0, cart_id);
                     applyCartAmounts(
                         response.cart_amount['subtotal'],
-                        response.cart_amount['tax'],
+                        response.cart_amount['tax_dict'],
                         response.cart_amount['grand_total']
                     );
                     checkEmptyCart();
