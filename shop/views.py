@@ -1,12 +1,14 @@
 from unicodedata import category
 
+from django.db import IntegrityError
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 
 import shop
-from .forms import ShopForm
+from .forms import ShopForm, OpeningHourForm
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
-from .models import Shop
+from .models import Shop, OpeningHour
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import check_role_shopper
@@ -222,3 +224,71 @@ def delete_item(request, pk=None):
     item.delete()
     messages.success(request, 'Product has been deleted successfully!')
     return redirect('items_by_category', category_id)  # Redirect to the category page after deletion
+
+
+@login_required(login_url='login')
+@user_passes_test(check_role_shopper)
+def opening_hours(request):
+    shop = get_shop(request)
+    opening_hours = OpeningHour.objects.filter(shop=shop)
+    form = OpeningHourForm()
+    context = {
+        'shop': shop,
+        'form': form,
+        'opening_hours': opening_hours,
+    }
+    return render(request, 'shop/opening_hours.html', context)
+
+@login_required(login_url='login')
+@user_passes_test(check_role_shopper)
+def add_opening_hours(request):
+    # handle the data and save them inside the database
+    if request.method == 'POST':
+        form = OpeningHourForm(request.POST)
+        if form.is_valid():
+            hour = form.save(commit=False)
+            hour.shop = get_shop(request)
+            if hour.is_closed:
+                if OpeningHour.objects.filter(shop=hour.shop, day=hour.day, is_closed=True).exists():
+                    error_message = f'{hour.get_day_display()} is already marked as closed.'
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'failed', 'message': error_message})
+                    messages.error(request, error_message)
+                    return redirect('opening_hours')
+                hour.from_hour = ''
+                hour.to_hour = ''
+            try:
+                hour.save()
+            except IntegrityError:
+                error_message = 'That opening slot already exists for this day.'
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'status': 'failed', 'message': error_message})
+                messages.error(request, error_message)
+                return redirect('opening_hours')
+
+            if hour.is_closed:
+                response = {'status': 'success', 'id': hour.id, 'day': hour.get_day_display(), 'is_closed': 'Closed'}
+            else:
+                response = {'status': 'success', 'id': hour.id, 'day': hour.get_day_display(), 'from_hour': hour.from_hour, 'to_hour': hour.to_hour}
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse(response)
+            return redirect('opening_hours')
+
+        error_message = form.errors.as_text() or 'Please fill all required fields correctly.'
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'failed', 'message': error_message})
+        messages.error(request, error_message)
+        return redirect('opening_hours')
+
+    return HttpResponse('Invalid request')
+
+
+@login_required(login_url='login')
+@user_passes_test(check_role_shopper)
+def remove_opening_hours(request, pk=None):
+    hour = get_object_or_404(OpeningHour, pk=pk)
+    hour.delete()
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'status': 'success', 'id': pk})
+    return redirect('opening_hours')

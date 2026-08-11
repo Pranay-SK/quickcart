@@ -137,10 +137,17 @@ Fresh groceries and everyday essentials delivered to your doorstep in minutes fr
 			    {% else %}
 				<img src="{% static 'extra-images/Default_shop_image.png' %}" class="img-thumb wp-post-image" alt="">
 				{% endif %}
-			</a></figure>
+			</a>
+		</figure>
+		{% if shop.is_open %}
+		<span class="restaurant-status open">
+			<em class="bookmarkRibbon"></em>Open
+		</span>
+		{% else %}
 		<span class="restaurant-status close">
 			<em class="bookmarkRibbon"></em>Close
 		</span>
+		{% endif %}
 	</div>
 	<div class="text-holder">
 

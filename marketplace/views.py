@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from django.db.models import Prefetch
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -5,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 from items.models import Category, Product
 from .models import Cart
-from shop.models import Shop
+from shop.models import Shop,OpeningHour
 from .context_processors import get_cart_amounts, get_cart_counter
 from django.db.models import Q
 
@@ -33,17 +35,41 @@ def shop_detail(request,shop_slug):
              )
     )
 
+
+    opening_hours = OpeningHour.objects.filter(shop=shop).order_by('day','-from_hour')
+    
+    # check current day's opening hours.
+    today_date = date.today()
+    today = today_date.isoweekday()
+    currnt_opening_hours = OpeningHour.objects.filter(shop=shop, day=today).order_by('from_hour')
+    is_open = shop.is_open()
+    today_display = 'Closed'
+    if is_open:
+        now_time = datetime.now().time()
+        for hour in currnt_opening_hours:
+            if hour.is_closed or not hour.from_hour or not hour.to_hour:
+                continue
+            start = datetime.strptime(hour.from_hour, "%I:%M %p").time()
+            end = datetime.strptime(hour.to_hour, "%I:%M %p").time()
+            if start <= now_time < end:
+                today_display = f"{hour.from_hour} - {hour.to_hour}"
+                break
+
     if request.user.is_authenticated:
-        cart_items=Cart.objects.filter(user=request.user)
+        cart_items = Cart.objects.filter(user=request.user)
         #cart_count=get_cart_counter(request)
     else:
-        cart_items=None
+        cart_items = None
         
     context={
-        'shop':shop,
-        'categories':categories,
+        'shop': shop,
+        'categories': categories,
         'cart_items': cart_items,
        # 'cart_count': cart_count,
+        'opening_hours': opening_hours,
+        'currnt_opening_hours': currnt_opening_hours,
+        'is_open': is_open,
+        'today_display': today_display,
     }
     return render(request,'marketplace/shop_detail.html',context)
 

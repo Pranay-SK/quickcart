@@ -335,4 +335,109 @@ $(document).ready(function(){
             }
         });
     }, true);
+
+        // ADD OPENING HOUR
+    function toggleOpeningHourFields() {
+        var isClosed = document.getElementById('id_is_closed').checked;
+        document.getElementById('id_from_hour').disabled = isClosed;
+        document.getElementById('id_to_hour').disabled = isClosed;
+        if (isClosed) {
+            document.getElementById('id_from_hour').value = '';
+            document.getElementById('id_to_hour').value = '';
+        }
+    }
+
+    $('#id_is_closed').on('change', function() {
+        toggleOpeningHourFields();
+    });
+
+    toggleOpeningHourFields();
+
+    $('#opening_hours').on('submit', function(e){
+        e.preventDefault();
+        var day = document.getElementById('id_day').value
+        var from_hour = document.getElementById('id_from_hour').value
+        var to_hour = document.getElementById('id_to_hour').value
+        var is_closed = document.getElementById('id_is_closed').checked
+        var csrf_token = $('input[name=csrfmiddlewaretoken]').val()
+        var url = document.getElementById('add_hour_url').value
+
+        if (is_closed) {
+            from_hour = '';
+            to_hour = '';
+        }
+
+        console.log(day, from_hour, to_hour, is_closed, csrf_token)
+
+        var validDays = ['1','2','3','4','5','6','7'];
+        var condition;
+        if(is_closed){
+            is_closed = 'True'
+            condition = validDays.includes(day);
+        }else{
+            is_closed = 'False'
+            condition = validDays.includes(day) && from_hour != '' && to_hour != '';
+        }
+
+        if(condition){
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    'day': day,
+                    'from_hour': from_hour,
+                    'to_hour': to_hour,
+                    'is_closed': is_closed,
+                    'csrfmiddlewaretoken': csrf_token,
+                },
+                success: function(response){
+                    if(response.status == 'success'){
+                        var currentPath = window.location.pathname.replace(/\/$/, '')
+                        var removeUrl = currentPath + '/remove/' + response.id + '/'
+                        if(response.is_closed == 'Closed'){
+                            html = '<tr id="hour-'+response.id+'"><td><b>'+response.day+'</b></td><td>Closed</td><td><a href="#" class="remove_hour" data-url="'+removeUrl+'">Remove</a></td></tr>';
+                        }else{
+                            html = '<tr id="hour-'+response.id+'"><td><b>'+response.day+'</b></td><td>'+response.from_hour+' - '+response.to_hour+'</td><td><a href="#" class="remove_hour" data-url="'+removeUrl+'">Remove</a></td></tr>';
+                        }
+                        
+                        $(".opening_hours").append(html)
+                        document.getElementById("opening_hours").reset();
+                    }else{
+                        swal(response.message, '', "error")
+                    }
+                }
+            })
+        }else{
+            swal('Please fill all fields', '', 'info')
+        }
+    });
+
+    // REMOVE OPENING HOUR
+    $(document).on('click', '.remove_hour', function(e){
+        var url = $(this).attr('href') || $(this).data('url');
+        if (!url) return;
+        e.preventDefault();
+        console.log('remove_hour click', url);
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            dataType: 'json',
+            cache: false,
+            success: function(response){
+                console.log('remove_hour response', response);
+                if(response && response.status === 'success'){
+                    var row = document.getElementById('hour-'+response.id);
+                    if(row) row.remove();
+                }
+            },
+            error: function(xhr, status, error){
+                console.error('remove_hour AJAX error', status, error, xhr.responseText);
+                if (url) {
+                    window.location = url;
+                }
+            }
+        });
+    });
+     // document ready close 
 });
