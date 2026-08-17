@@ -5,8 +5,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
 from accounts.utils import send_notification
+from items.models import Product
 from marketplace.context_processors import get_cart_amounts
-from marketplace.models import Cart
+from marketplace.models import Cart, Tax
 from orders.forms import OrderForm
 from orders.models import Order, OrderedProduct, Payment
 from orders.utils import generate_order_number
@@ -25,6 +26,41 @@ def place_order(request):
     cart_count = cart_items.count()
     if cart_count <= 0:
         return redirect('marketplace')
+
+    shops_ids = []
+    for i in cart_items:
+        if i.Product.shop.id not in shops_ids:
+            shops_ids.append(i.Product.shop.id)
+
+
+    get_tax = Tax.objects.filter(is_active=True)
+    subtotal=0
+    total_data={}
+    k={}
+    for i in cart_items:
+        product=Product.objects.get(pk=i.Product.id,shop_id__in=shops_ids)
+        s_id=product.shop.id
+        if s_id in k:
+            subtotal=k[s_id]
+            subtotal+=(product.price*i.quantity)
+            k[s_id]=subtotal
+        else:
+            subtotal=(product.price*i.quantity)
+            k[s_id]=subtotal
+
+        #Calculate the tax_data
+        tax_dict={}
+        for i in get_tax:
+            tax_type = i.tax_type
+            tax_percentage = i.tax_percentage
+            tax_amount = round((tax_percentage * subtotal)/100, 2)
+            tax_dict.update({tax_type: {str(tax_percentage) : str(tax_amount)}})
+        # construct total data
+        total_data.update({product.shop.id:{str(subtotal):str(tax_dict)}})
+    
+
+    
+
 
     subtotal = get_cart_amounts(request)['subtotal']
     total_tax = get_cart_amounts(request)['tax']
@@ -47,12 +83,12 @@ def place_order(request):
             order.user = request.user
             order.total = grand_total
             order.tax_data = json.dumps(tax_data)
-           # order.total_data = tax_data
+            order.total_data = json.dumps(total_data)
             order.total_tax = total_tax
             order.payment_method = request.POST['payment_method']
             order.save() # order id/ pk is generated
             order.order_number = generate_order_number(order.id)
-            # order.shops.add(*shops_ids)
+            order.shops.add(*shops_ids)
             order.save()
 
             # Razorpay payment

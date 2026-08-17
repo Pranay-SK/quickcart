@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 
+from orders.models import Order, OrderedProduct
 import shop
 from .forms import ShopForm, OpeningHourForm
 from accounts.forms import UserProfileForm
@@ -292,3 +293,32 @@ def remove_opening_hours(request, pk=None):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success', 'id': pk})
     return redirect('opening_hours')
+
+def order_detail(request, order_number):
+    try:
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        ordered_product = OrderedProduct.objects.filter(order=order, product__shop=get_shop(request))
+
+        context = {
+            'shop': get_shop(request),
+            'order': order,
+            'ordered_product': ordered_product,
+            'subtotal': order.get_total_by_shop()['subtotal'],
+            'tax_data': order.get_total_by_shop()['tax_dict'],
+            'grand_total': order.get_total_by_shop()['grand_total'],
+            
+        }
+    except:
+        return redirect('shopperdashboard')
+    return render(request, 'shop/order_detail.html', context)
+
+
+def my_orders(request):
+    shop = Shop.objects.get(user=request.user)
+    orders = Order.objects.filter(shops__in=[shop.id], is_ordered=True).order_by('created_at')
+
+    context = {
+        'orders': orders,
+        'shop':shop,
+    }
+    return render(request, 'shop/my_orders.html', context)

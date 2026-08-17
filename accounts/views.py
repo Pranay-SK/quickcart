@@ -1,8 +1,12 @@
+import datetime
+
 from django.http import HttpResponse
 
 from django.shortcuts import redirect, render
 
 from django.contrib import messages,auth
+
+from orders.models import Order
 
 from .forms import UserForm
 from .models import User, UserProfile
@@ -175,7 +179,14 @@ def myAccount(request):
 @login_required(login_url='login')
 @user_passes_test(check_role_customer)
 def custdashboard(request):
-    return render(request, 'accounts/custdashboard.html')
+    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
+    recent_orders = orders[:5]
+    context = {
+        'orders': orders,
+        'orders_count': orders.count(),
+        'recent_orders': recent_orders,
+    }
+    return render(request, 'accounts/custdashboard.html', context)
 
 @login_required(login_url='login')
 @user_passes_test(check_role_shopper)
@@ -183,8 +194,28 @@ def custdashboard(request):
 @user_passes_test(check_role_shopper)
 def shopperdashboard(request):
     shop = Shop.objects.get(user=request.user)
+    orders = Order.objects.filter(shops__in=[shop.id], is_ordered=True).order_by('created_at')
+    recent_orders = orders[:5]
+
+    # current month's revenue
+    current_month = datetime.datetime.now().month
+    current_month_orders = orders.filter(shops__in=[shop.id], created_at__month=current_month)
+    current_month_revenue = 0
+    for i in current_month_orders:
+        current_month_revenue += i.get_total_by_shop()['grand_total']
+
+    #total revenue
+    total_revenue = 0
+    for i in orders:
+        total_revenue += i.get_total_by_shop()['grand_total']
+
     context = {
         'shop': shop,
+        'orders': orders,
+        'orders_count': orders.count(),
+        'recent_orders': recent_orders,
+        'total_revenue':total_revenue,
+        'current_month_revenue': current_month_revenue,
     }
     return render(request, 'accounts/shopperdashboard.html', context)
 
