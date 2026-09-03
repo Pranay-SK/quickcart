@@ -92,7 +92,7 @@ def add_to_cart(request, product_id):
                     return JsonResponse({
                         'status': 'Success', 
                         'message': 'Increased the cart quantity', 
-                        'cart_counter': get_cart_counter(request), 
+                        'cart_counter': get_cart_counter(request)['cart_count'], 
                         'qty': chkCart.quantity, 
                         'cart_amount': get_cart_amounts(request)
                                          })
@@ -101,7 +101,7 @@ def add_to_cart(request, product_id):
                     return JsonResponse({
                         'status': 'Success', 
                         'message': 'Added the product to the cart', 
-                        'cart_counter': get_cart_counter(request), 
+                        'cart_counter': get_cart_counter(request)['cart_count'], 
                         'qty': chkCart.quantity, 
                      'cart_amount': get_cart_amounts(request)
                     })
@@ -136,7 +136,7 @@ def decrease_cart(request, product_id):
                     return JsonResponse({
                         'status': 'Success', 
                         'message': 'Cart updated', 
-                        'cart_counter': get_cart_counter(request), 
+                        'cart_counter': get_cart_counter(request)['cart_count'], 
                         'qty': qty, 
                         'cart_id': cart_id,
                         'cart_amount': get_cart_amounts(request)
@@ -175,7 +175,7 @@ def delete_cart(request, cart_id):
                     return JsonResponse({
                         'status': 'Success', 
                         'message': 'Cart item has been deleted!', 
-                        'cart_counter': get_cart_counter(request), 
+                           'cart_counter': get_cart_counter(request)['cart_count'], 
                        'cart_amount': get_cart_amounts(request)
                         })
             except:

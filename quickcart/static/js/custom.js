@@ -110,6 +110,16 @@ $(document).ready(function(){
         }
     }
 
+    function updateCartCounter(response){
+        var cartCount = response.cart_counter;
+        if (cartCount && typeof cartCount === 'object') {
+            cartCount = cartCount.cart_count;
+        }
+        if (cartCount !== undefined) {
+            $('#cart_counter').text(cartCount);
+        }
+    }
+
     $(document).on('click', '.add_to_cart', function(e){
         e.preventDefault();
         const product_id = $(this).attr('data-id');
@@ -129,7 +139,7 @@ $(document).ready(function(){
             success: function(response){
                 console.log('add_to_cart response', response);
                 if (response.status === 'Success') {
-                    $('#cart_counter').html(response.cart_counter.cart_count);
+                    updateCartCounter(response);
                     $('#qty-'+product_id).html(response.qty);
                     applyCartAmounts(
                         response.cart_amount['subtotal'],
@@ -171,7 +181,7 @@ $(document).ready(function(){
             success: function(response){
                 console.log('decrease_cart response', response);
                 if (response.status === 'Success') {
-                    $('#cart_counter').html(response.cart_counter.cart_count);
+                    updateCartCounter(response);
                     $('#qty-'+product_id).html(response.qty);
                       if(window.location.pathname =='/cart/'){
                     removeCartItem(response.qty, response.cart_id);
@@ -231,7 +241,7 @@ $(document).ready(function(){
                 if (response.status === 'Failed') {
                     safeSwal(response.message, '', 'error');
                 } else {
-                    $('#cart_counter').html(response.cart_counter.cart_count);
+                    updateCartCounter(response);
                     // remove immediately so UI is responsive, then show message
                     removeCartItem(0, cart_id);
                     applyCartAmounts(
@@ -326,7 +336,7 @@ $(document).ready(function(){
                 if (response.status === 'Failed') {
                     safeSwal(response.message, '', 'error');
                 } else {
-                    $('#cart_counter').html(response.cart_counter.cart_count);
+                    updateCartCounter(response);
                     removeCartItem(0, cart_id);
                     applyCartAmounts(
                         response.cart_amount['subtotal'],

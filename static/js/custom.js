@@ -73,6 +73,17 @@ function onPlaceChanged (){
 
       }
    }
+
+}
+
+function updateCartCounter(response){
+    var cartCount = response.cart_counter;
+    if (cartCount && typeof cartCount === 'object') {
+        cartCount = cartCount.cart_count;
+    }
+    if (cartCount !== undefined) {
+        $('#cart_counter').text(cartCount);
+    }
 }
 
 
@@ -106,7 +117,7 @@ $(document).ready(function(){
             success: function(response){
                 console.log('add_to_cart response', response);
                 if (response.status === 'Success') {
-                    $('#cart_counter').html(response.cart_counter.cart_count);
+                    updateCartCounter(response);
                     $('#qty-'+product_id).html(response.qty);
                 } else {
                     console.warn('Add to cart failed:', response.message);
@@ -137,7 +148,7 @@ $(document).ready(function(){
             success: function(response){
                 console.log('decrease_cart response', response);
                 if (response.status === 'Success') {
-                    $('#cart_counter').html(response.cart_counter.cart_count);
+                    updateCartCounter(response);
                     $('#qty-'+product_id).html(response.qty);
                 } else {
                     console.warn('Decrease cart failed:', response.message);
