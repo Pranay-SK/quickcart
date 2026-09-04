@@ -29,4 +29,4 @@ COPY . /app/
 RUN python manage.py collectstatic --noinput
 
 # Run gunicorn (Render provides the $PORT environment variable)
-CMD gunicorn quickcart.wsgi:application --bind 0.0.0.0:$PORT
+CMD python manage.py migrate --noinput && gunicorn quickcart.wsgi:application --bind 0.0.0.0:$PORT
