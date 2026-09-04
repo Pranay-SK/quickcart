@@ -89,6 +89,16 @@ urllib3==2.7.0
 
 ## Installation & Setup
 
+## Deploy on Railway
+
+1. Push this repository to GitHub and create a new Railway project from the repository.
+2. Add a Railway PostgreSQL service with PostGIS enabled. Link it to the web service so Railway provides `DATABASE_URL`.
+3. In the web service Variables tab, add the values from `.env` for `SECRET_KEY`, email, Google Maps, PayPal, and Razorpay. Set `DEBUG=False` and `ALLOWED_HOSTS` to the Railway public domain.
+4. Deploy. Railway detects the `Procfile`, runs migrations and static collection, and starts Gunicorn on Railway's `$PORT`.
+5. Generate a Railway domain under Settings > Networking and add that hostname to `ALLOWED_HOSTS` and `RAILWAY_PUBLIC_DOMAIN`.
+
+Uploaded media is stored on the service filesystem and can be lost when the service is redeployed. Use a Railway volume or object storage for production uploads.
+
 ### Prerequisites
 - Python 3.8 or higher
 - pip package manager

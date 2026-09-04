@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import dj_database_url
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,11 +26,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 GOOGLE_API_KEY = config('GOOGLE_API_KEY', default='')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in config(
+    'ALLOWED_HOSTS', default='localhost,127.0.0.1'
+).split(',') if host.strip()]
+RAILWAY_PUBLIC_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
+if RAILWAY_PUBLIC_DOMAIN:
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+
+CSRF_TRUSTED_ORIGINS = [
+    f'https://{host}' for host in ALLOWED_HOSTS
+    if host not in {'localhost', '127.0.0.1'} and '*' not in host
+]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=not DEBUG, cast=bool)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int) if not DEBUG else 0
 
 
 # Application definition
@@ -53,6 +69,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,17 +107,26 @@ WSGI_APPLICATION = 'quickcart.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-       # 'ENGINE': 'django.db.backends.postgresql',
-        'ENGINE':'django.contrib.gis.db.backends.postgis',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        #'PORT': '5432',
+DATABASE_URL = config('DATABASE_URL', default='')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            engine='django.contrib.gis.db.backends.postgis',
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT', default='5432'),
+        }
+    }
 
 AUTH_USER_MODEL='accounts.User'
 
@@ -145,6 +171,12 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
 
 
 # Media files configuration
@@ -162,11 +194,11 @@ MESSAGE_TAGS={
 
 
 # Email configuration
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_PORT = config('EMAIL_PORT', cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = True
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL='QuickCart Marketplace <quick.cartdjango@gmail.com>'
 
 GOOGLE_API_KEY = config('GOOGLE_API_KEY', default='')
@@ -199,8 +231,8 @@ GDAL_LIBRARY_PATH = os.path.join(
     'gdal.dll'
 )
 
-PAYPAL_CLIENT_ID=config('PAYPAL_CLIENT_ID')
+PAYPAL_CLIENT_ID=config('PAYPAL_CLIENT_ID', default='')
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 
-RZP_KEY_ID=config('RZP_KEY_ID')
-RZP_KEY_SECRET=config('RZP_KEY_SECRET')
+RZP_KEY_ID=config('RZP_KEY_ID', default='')
+RZP_KEY_SECRET=config('RZP_KEY_SECRET', default='')
