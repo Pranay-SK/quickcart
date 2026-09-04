@@ -2,6 +2,7 @@ services:
   - type: web
     name: quickcart
     env: docker
+    plan: free
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
