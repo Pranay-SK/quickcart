@@ -104,9 +104,9 @@ Uploaded media is stored on the service filesystem and can be lost when the serv
 This repository includes `render.yaml` for a Render Blueprint deployment.
 
 1. Push the latest changes to GitHub.
-2. In Render, choose New > Blueprint and select the repository.
-3. Approve the `quickcart` web service and `quickcart-db` PostgreSQL database. The Blueprint links `DATABASE_URL` automatically.
-4. In the web service Environment tab, fill in the variables marked as secret: email, Google Maps, PayPal, and Razorpay credentials.
+2. Create a free PostGIS database on a provider such as Supabase or Neon, then copy its pooled PostgreSQL connection string.
+3. In Render, choose New > Blueprint and select the repository. The Blueprint creates only the free web service.
+4. In the web service Environment tab, set `DATABASE_URL` to the database connection string and fill in the variables marked as secret: email, Google Maps, PayPal, and Razorpay credentials.
 5. Deploy and open the generated `onrender.com` URL. Render supplies `RENDER_EXTERNAL_HOSTNAME` automatically.
 
 The build installs GDAL, GEOS, and PROJ for GeoDjango. After the database is created, enable PostGIS from the database shell with `CREATE EXTENSION IF NOT EXISTS postgis;` if it is not already enabled.
