@@ -26,7 +26,7 @@ RUN pip install -r requirements.txt
 COPY . /app/
 
 # Collect static files
-RUN python manage.py collectstatic --noinput
+RUN SECRET_KEY=dummy DB_NAME=dummy DB_USER=dummy DB_PASSWORD=dummy DB_HOST=dummy python manage.py collectstatic --noinput
 
 # Run gunicorn (Render provides the $PORT environment variable)
 CMD python manage.py migrate --noinput && gunicorn quickcart.wsgi:application --bind 0.0.0.0:$PORT
