@@ -1,9 +1,8 @@
 services:
   - type: web
     name: quickcart
-    runtime: python
-    buildCommand: apt-get update && apt-get install -y gdal-bin libgdal-dev libgeos-dev libproj-dev && pip install -r requirements.txt && pip install "GDAL==$(gdal-config --version)"
-    startCommand: python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn quickcart.wsgi:application --bind 0.0.0.0:$PORT
+    env: docker
+    releaseCommand: python manage.py migrate --noinput
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL

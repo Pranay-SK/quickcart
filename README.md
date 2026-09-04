@@ -88,7 +88,7 @@ urllib3==2.7.0
 ```
 
 ## Installation & Setup
-
+CREATE EXTENSION IF NOT EXISTS postgis;
 ## Deploy on Railway
 
 1. Push this repository to GitHub and create a new Railway project from the repository.
@@ -99,17 +99,24 @@ urllib3==2.7.0
 
 Uploaded media is stored on the service filesystem and can be lost when the service is redeployed. Use a Railway volume or object storage for production uploads.
 
-## Deploy on Render
+## Deploy on Supabase + Render
 
-This repository includes `render.yaml` for a Render Blueprint deployment.
+Use Supabase only for PostgreSQL and Render for the Django frontend/backend. This repository includes `render.yaml` for the Render web service.
 
-1. Push the latest changes to GitHub.
-2. Create a free PostGIS database on a provider such as Supabase or Neon, then copy its pooled PostgreSQL connection string.
-3. In Render, choose New > Blueprint and select the repository. The Blueprint creates only the free web service.
-4. In the web service Environment tab, set `DATABASE_URL` to the database connection string and fill in the variables marked as secret: email, Google Maps, PayPal, and Razorpay credentials.
-5. Deploy and open the generated `onrender.com` URL. Render supplies `RENDER_EXTERNAL_HOSTNAME` automatically.
+1. Create a Supabase project and open **SQL Editor**. Run:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS postgis;
+   ```
+2. In Supabase, open **Connect** and copy the **Session pooler** PostgreSQL URI. Add `?sslmode=require` if it is not already present.
+3. Push the latest changes to GitHub.
+4. In Render, choose **New > Blueprint** and select the repository. The Blueprint creates only the web service.
+5. In Render Environment, set `DATABASE_URL` to the Supabase URI and fill in the variables marked as secret: email, Google Maps, PayPal, and Razorpay credentials.
+6. Deploy. Render runs `python manage.py migrate`, which creates the QuickCart schema in Supabase, then collects static files and starts Gunicorn.
+7. Open the generated `onrender.com` URL. Render supplies `RENDER_EXTERNAL_HOSTNAME` automatically.
 
 The build installs GDAL, GEOS, and PROJ for GeoDjango. After the database is created, enable PostGIS from the database shell with `CREATE EXTENSION IF NOT EXISTS postgis;` if it is not already enabled.
+
+Do not paste the Supabase URI into Git or commit it in `.env`. The URI contains the database password.
 
 Render service disks are ephemeral. Use a persistent disk or object storage for uploaded media in production.
 
