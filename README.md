@@ -99,6 +99,20 @@ urllib3==2.7.0
 
 Uploaded media is stored on the service filesystem and can be lost when the service is redeployed. Use a Railway volume or object storage for production uploads.
 
+## Deploy on Render
+
+This repository includes `render.yaml` for a Render Blueprint deployment.
+
+1. Push the latest changes to GitHub.
+2. In Render, choose New > Blueprint and select the repository.
+3. Approve the `quickcart` web service and `quickcart-db` PostgreSQL database. The Blueprint links `DATABASE_URL` automatically.
+4. In the web service Environment tab, fill in the variables marked as secret: email, Google Maps, PayPal, and Razorpay credentials.
+5. Deploy and open the generated `onrender.com` URL. Render supplies `RENDER_EXTERNAL_HOSTNAME` automatically.
+
+The build installs GDAL, GEOS, and PROJ for GeoDjango. After the database is created, enable PostGIS from the database shell with `CREATE EXTENSION IF NOT EXISTS postgis;` if it is not already enabled.
+
+Render service disks are ephemeral. Use a persistent disk or object storage for uploaded media in production.
+
 ### Prerequisites
 - Python 3.8 or higher
 - pip package manager

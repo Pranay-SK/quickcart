@@ -34,8 +34,10 @@ ALLOWED_HOSTS = [host.strip() for host in config(
     'ALLOWED_HOSTS', default='localhost,127.0.0.1'
 ).split(',') if host.strip()]
 RAILWAY_PUBLIC_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
-if RAILWAY_PUBLIC_DOMAIN:
-    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+RENDER_EXTERNAL_HOSTNAME = config('RENDER_EXTERNAL_HOSTNAME', default='')
+for public_hostname in (RAILWAY_PUBLIC_DOMAIN, RENDER_EXTERNAL_HOSTNAME):
+    if public_hostname and public_hostname not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(public_hostname)
 
 CSRF_TRUSTED_ORIGINS = [
     f'https://{host}' for host in ALLOWED_HOSTS
@@ -206,30 +208,11 @@ GOOGLE_API_KEY = config('GOOGLE_API_KEY', default='')
 
 import os
 
-os.environ['PATH'] = (
-    os.path.join(BASE_DIR, 'env', 'Lib', 'site-packages', 'osgeo')
-    + os.pathsep
-    + os.environ['PATH']
-)
-
-os.environ['PROJ_LIB'] = os.path.join(
-    BASE_DIR,
-    'env',
-    'Lib',
-    'site-packages',
-    'osgeo',
-    'data',
-    'proj'
-)
-
-GDAL_LIBRARY_PATH = os.path.join(
-    BASE_DIR,
-    'env',
-    'Lib',
-    'site-packages',
-    'osgeo',
-    'gdal.dll'
-)
+if os.name == 'nt':
+    osgeo_path = os.path.join(BASE_DIR, 'env', 'Lib', 'site-packages', 'osgeo')
+    os.environ['PATH'] = osgeo_path + os.pathsep + os.environ['PATH']
+    os.environ['PROJ_LIB'] = os.path.join(osgeo_path, 'data', 'proj')
+    GDAL_LIBRARY_PATH = os.path.join(osgeo_path, 'gdal.dll')
 
 PAYPAL_CLIENT_ID=config('PAYPAL_CLIENT_ID', default='')
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
